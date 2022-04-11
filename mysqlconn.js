@@ -1,6 +1,7 @@
 const mysql = require('mysql2')
 
 const con = mysql.createConnection({
+	multipleStatements: true,
 	host: 'localhost',
 	user: 'wad',
 	password: 'wad',

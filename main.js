@@ -35,4 +35,21 @@ app.get("/accommodation/:location/type/:type", (req, res) =>{
     });
 });
 
+// {"accID": 1, "thedate": 220601, "username": "testusername", "npeople": 5}
+app.post("/book", (req, res) =>{
+	con.query(`INSERT INTO acc_bookings(accID, thedate, username, npeople) VALUES(?,?,?,?);
+	UPDATE acc_dates SET availability = availability - 1 WHERE accID = ? AND thedate = ?`,
+			 [req.body.accID, req.body.thedate, req.body.username, req.body.npeople , req.body.accID, req.body.thedate],
+			 function(error, results, fields){
+		if (error) {
+      		return connection.rollback(function() {
+        		throw error;
+			});
+		}else{
+			res.json("successfully booked.");
+		}
+	});
+});
+
+
 app.listen(3000);
