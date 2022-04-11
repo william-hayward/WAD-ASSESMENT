@@ -24,4 +24,15 @@ app.get("/accommodation/:location", (req, res) => {
     });
 });
 
+app.get("/accommodation/:location/type/:type", (req, res) =>{
+	con.query(`SELECT * FROM accommodation WHERE location=? AND type =?`,
+    [req.params.location, req.params.type], (error,results,fields) => { 
+        if(error) {
+            res.status(500).json({ error: error });
+        } else {
+            res.json(results);
+        }
+    });
+});
+
 app.listen(3000);
