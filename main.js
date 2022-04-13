@@ -7,7 +7,7 @@ const con = require('./mysqlconn');
 const mysql = require('mysql2');
 
 app.use(express.json());
-
+app.use(express.static('public'));
 
 app.get("/", (req, res) => {
 	console.log("working"); // test purposes
