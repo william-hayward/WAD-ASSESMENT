@@ -42,8 +42,8 @@ app.post("/book", (req, res) =>{
 			 [req.body.accID, req.body.thedate, req.body.username, req.body.npeople , req.body.accID, req.body.thedate],
 			 function(error, results, fields){
 		if (error) {
-      		return connection.rollback(function() {
-        		throw error;
+      		return con.rollback(function() {
+        		res.status(500).json({ error: error });
 			});
 		}else{
 			res.json("successfully booked.");
