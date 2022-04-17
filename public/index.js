@@ -21,39 +21,63 @@ async function searchAccomodation(location) {
 		btn.setAttribute('type', 'button');
 		btn.setAttribute('value', 'Book!');
 		btn.addEventListener('click', async (e) => {
-			const accom = {
-				accID: location.ID,
-				thedate: 220601,
-				username: 'tempUsername',
-				npeople: 2,
-			};
-			const BookAccomodation = await fetch(`/book`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(accom),
-			});
-			if (BookAccomodation.status == 200) {
-				alert('Accomodation booked successfully');
-			} else if (BookAccomodation.status === 401) {
-				alert('Error. user is not logged in.');
-			} else {
-				const json = await response.json();
-				alert(`Error booking accomodation: details ${json.error}`);
-			}
+			book(location.ID);
 		});
+
 		document.getElementById('results').appendChild(p);
 		document.getElementById('results').appendChild(btn);
 
 		const pos = [location.latitude, location.longitude];
 		map.setView(pos, 8);
 		const locationMarker = L.marker(pos).addTo(map);
-		locationMarker.bindPopup(`Name: ${location.name}, Description: ${location.description}`);
+		locationMarker.bindPopup(`<div>Name: ${location.name}, Description: ${location.description}</div>
+		<button id="btn_Book" type="button" >Book!</button>`);
+		locationMarker.on('click', function (e) {
+			document.getElementById('btn_Book').addEventListener('click', () => {
+				book(location.ID);
+			});
+		});
 	});
 }
 
-//)};
+async function book(id) {
+	const thedate = 220601;
+	const npeople = 2;
+	const username = 'tim';
+
+	const availability = await fetch(`/availability/id/${id}/date/${thedate}`);
+	const results = await availability.json();
+	var spacesLeft = 3; // this value is just a placement value
+	results.forEach((result) => {
+		console.log(result.availability);
+		var spacesLeft = result.availability;
+	});
+
+	const BookAccomodation = await fetch(
+		`/book/id/${id}/date/${thedate}/people/${npeople}/availability/${spacesLeft}`,
+		{
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ username: username }),
+		}
+	);
+	if (BookAccomodation.status == 200) {
+		alert('Accomodation booked successfully');
+	} else if (BookAccomodation.status === 401) {
+		alert('Error. user is not logged in.');
+	} else if (BookAccomodation.status === 404) {
+		const json = await BookAccomodation.json();
+		alert(`Error. ${json.error}`);
+	} else if (BookAccomodation.status === 406) {
+		const json = await BookAccomodation.json();
+		alert(`Error. ${json.error}`);
+	} else {
+		const json = await BookAccomodation.json();
+		alert(`Error booking accomodation: details ${json.error}`);
+	}
+}
 
 document.getElementById('Search!').addEventListener('click', () => {
 	const location = document.getElementById('location').value;
