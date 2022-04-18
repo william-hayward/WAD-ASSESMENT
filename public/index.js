@@ -30,28 +30,53 @@ async function searchAccomodation(location) {
 		const pos = [location.latitude, location.longitude];
 		map.setView(pos, 8);
 		const locationMarker = L.marker(pos).addTo(map);
-		locationMarker.bindPopup(`<div>Name: ${location.name}, Description: ${location.description}</div>
-		<button id="btn_Book" type="button" >Book!</button>`);
-		locationMarker.on('click', function (e) {
-			document.getElementById('btn_Book').addEventListener('click', () => {
-				book(location.ID);
+
+		const avaliableDates = fetch(`/datesAvaliable/${location.ID}`)
+			.then((response) => response.json())
+			.then((result) => {
+				let html = `Name: ${location.name}, Description: ${location.description}<br>
+			<form>
+			<p>Please choose a booking date:</p>`;
+				result.forEach((date) => {
+					html += `<input type="radio" id="date" name="dates" value="${date.thedate}">
+  					<label for="date">${date.thedate}</label><br>`;
+				});
+				html += `
+				<label for="quantity">Number of people:</label>
+  				<input type="number" id="quantity" name="quantity" min="1" max="20"><br>
+				<input id="btn_Book" type="button" value="Book!">
+				</form>`;
+				locationMarker.bindPopup(html);
+				locationMarker.on('click', function (e) {
+					document.getElementById('btn_Book').addEventListener('click', () => {
+						const quantity = document.getElementById('quantity').value;
+						var dates = document.getElementsByName('dates');
+						var dateSelected;
+						for (var i = 0; i < dates.length; i++) {
+							if (dates[i].checked) {
+								dateSelected = dates[i].value;
+							}
+						}
+						book(location.ID, dateSelected, quantity);
+					});
+				});
 			});
-		});
 	});
 }
 
-async function book(id) {
-	const thedate = 220601;
-	const npeople = 2;
-	const username = 'tim';
 
+async function book(id, date, numPeople) {
+	const thedate = date;
+	const npeople = numPeople;
+	const username = '';
+	
+	var spacesLeft = 0
 	const availability = await fetch(`/availability/id/${id}/date/${thedate}`);
 	const results = await availability.json();
-	var spacesLeft = 3; // this value is just a placement value
 	results.forEach((result) => {
-		console.log(result.availability);
-		var spacesLeft = result.availability;
+		spacesLeft = result.availability;
 	});
+	console.log(spacesLeft)
 
 	const BookAccomodation = await fetch(
 		`/book/id/${id}/date/${thedate}/people/${npeople}/availability/${spacesLeft}`,

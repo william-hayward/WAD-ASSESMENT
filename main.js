@@ -107,7 +107,7 @@ app.post('/book/id/:accID/date/:thedate/people/:npeople/availability/:availabili
 		res.status(404).json({ error: 'accID was not specified.' });
 	} else if (req.params.npeople == null) {
 		res.status(404).json({ error: 'Number of people was not specified.' });
-	} else if (req.params.availability - req.params.npeople <= 0) {
+	} else if (req.params.availability - req.params.npeople < 0) {
 		res.status(406).json({
 			error: 'Number of people exceeds the number of availabile spaces.',
 		});
@@ -147,6 +147,13 @@ app.get('/availability/id/:accID/date/:date', (req, res) => {
 			res.json(results);
 		}
 	);
+});
+
+app.get('/datesAvaliable/:id', (req, res) =>{
+	con.query(`SELECT thedate FROM acc_dates WHERE accID = ?`,
+			 [req.params.id], (error, results, field) =>{
+		res.json(results);
+	});
 });
 
 app.listen(3000);
