@@ -11,6 +11,12 @@ const expressSession = require('express-session');
 const MySQLStore = require('express-mysql-session')(expressSession);
 const sessionStore = new MySQLStore({}, con.promise());
 
+// passport variables:
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const UserDao = require('./dao/userDao');
+
+
 app.use(express.json());
 app.use(express.static('public'));
 
@@ -30,7 +36,10 @@ app.use(
 	})
 );
 
-app.post('/login', (req, res) => {
+app.use(passport.initialize());
+app.use(passport.session());
+
+/*app.post('/login', (req, res) => {
 	con.query(
 		`SELECT * FROM acc_users WHERE username=? AND password=?`,
 		[req.body.username, req.body.password],
@@ -43,18 +52,22 @@ app.post('/login', (req, res) => {
 			}
 		}
 	);
+});*/
+
+app.post('/login', passport.authenticate('local', {failureRedirect: '/badlogin'}), (req, res) => {
+	res.json(req.user);
 });
 
-app.post('/logout', (req, res) => {
+app.post('/logout', (req,res) => {
 	req.session = null;
-	res.json({ success: 1 });
+	res.json({'success': 1});
 });
 
 app.use((req, res, next) => {
 	if (['POST', 'DELETE'].indexOf(req.method) == -1) {
 		next();
 	} else {
-		if (req.session.username) {
+		if(req.user && req.user.username){
 			next();
 		} else {
 			res.status(401).json({ error: "You're not logged in. Go away!" });
@@ -62,8 +75,43 @@ app.use((req, res, next) => {
 	}
 });
 
+const userRouter = require('./routes/users.js');
+app.use('/users', userRouter)
+
 app.get('/login', (req, res) => {
-	res.json({ username: req.session.username || null });
+	res.json({username: req.user.username || null});
+});
+
+passport.use(new LocalStrategy(async(username, password, done) => {
+	const userDao = new UserDao(con, "acc_users");
+	try{
+		const userDetails = await userDao.login(username, password);
+		if(userDetails === null){
+			return done(null, false);
+		}else{
+			return done(null, userDetails);
+		}
+	}catch(e){
+		return done(e);
+	}
+}));
+
+passport.serializeUser((userDetails, done) => {
+	done(null, userDetails.ID);
+});
+
+passport.deserializeUser(async(userid, done) => {
+	try{
+		const userDao = new UserDao(con, "acc_users");
+		const details = await userDao.findById(userid);
+		done(null, details);
+	}catch(e){
+		done(e);
+	}
+});
+
+app.get('/badlogin', (req, res) => {
+	res.status(401).json({error: "The login was invalid"});
 });
 
 app.get('/accommodation/:location', (req, res) => {
@@ -120,7 +168,7 @@ app.post('/book/id/:accID/date/:thedate/people/:npeople/availability/:availabili
 			[
 				req.params.accID,
 				req.params.thedate,
-				req.session.username,
+				req.user.username,
 				req.params.npeople,
 				req.params.npeople,
 				req.params.accID,
