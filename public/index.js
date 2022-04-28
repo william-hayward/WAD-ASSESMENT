@@ -92,7 +92,7 @@ async function book(id, thedate, npeople) {
 		alert('Accomodation booked successfully');
 	} else if (BookAccomodation.status === 401) {
 		alert('Error. user is not logged in.');
-	} else if (BookAccomodation.status === 404) {
+	} else if (BookAccomodation.status === 400) {
 		const json = await BookAccomodation.json();
 		alert(`Error. ${json.error}`);
 	} else if (BookAccomodation.status === 406) {
