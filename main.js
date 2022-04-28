@@ -150,11 +150,11 @@ app.post('/book', (req, res) => {
 	var date = date.replace('-', '');
 	var date = Number(date);
 	if (req.body.thedate == null) {
-		res.status(404).json({ error: 'Date was not specified.' });
+		res.status(400).json({ error: 'Date was not specified.' });
 	} else if (req.body.accID == null) {
-		res.status(404).json({ error: 'accID was not specified.' });
+		res.status(400).json({ error: 'accID was not specified.' });
 	} else if (req.body.npeople == 0) {
-		res.status(404).json({ error: 'Number of people was not specified.' });
+		res.status(400).json({ error: 'Number of people was not specified.' });
 	} else if (req.body.availability - req.body.npeople < 0) {
 		res.status(406).json({
 			error: 'Number of people exceeds the number of availabile spaces.',
