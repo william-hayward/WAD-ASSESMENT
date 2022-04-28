@@ -21,7 +21,7 @@ async function searchAccomodation(location) {
 		btn.setAttribute('type', 'button');
 		btn.setAttribute('value', 'Book!');
 		btn.addEventListener('click', async (e) => {
-			book(location.ID);
+			book(location.ID, 220601, 2);
 		});
 
 		document.getElementById('results').appendChild(p);
@@ -65,27 +65,27 @@ async function searchAccomodation(location) {
 }
 
 
-async function book(id, date, numPeople) {
-	const thedate = date;
-	const npeople = numPeople;
-	const username = '';
-	
+async function book(id, thedate, npeople) {
+
 	var spacesLeft = 0
 	const availability = await fetch(`/availability/id/${id}/date/${thedate}`);
 	const results = await availability.json();
 	results.forEach((result) => {
 		spacesLeft = result.availability;
 	});
-	console.log(spacesLeft)
 
-	const BookAccomodation = await fetch(
-		`/book/id/${id}/date/${thedate}/people/${npeople}/availability/${spacesLeft}`,
+	const BookAccomodation = await fetch(`/book`,
 		{
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
 			},
-			body: JSON.stringify({ username: username }),
+			body: JSON.stringify({
+				accID: id,
+				thedate: thedate,
+				npeople: npeople,
+				availability: spacesLeft
+			}),
 		}
 	);
 	if (BookAccomodation.status == 200) {
